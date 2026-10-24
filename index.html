@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trail Code Context — Focused Feedback Concept</title>
+  <style>
+    :root {
+      --canvas: #f5f7fb;
+      --surface: #ffffff;
+      --surface-soft: #f8faff;
+      --navy: #15233d;
+      --muted: #61708a;
+      --line: #dfe5ef;
+      --indigo: #4f46c7;
+      --indigo-dark: #38329a;
+      --indigo-soft: #eeedff;
+      --green: #19734c;
+      --green-soft: #e9f7ef;
+      --amber: #9a6510;
+      --amber-soft: #fff6df;
+      --red: #a3393e;
+      --red-soft: #fff0f1;
+      --shadow: 0 16px 40px rgba(30, 45, 75, .07);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--canvas);
+      color: var(--navy);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    button, textarea { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; }
+    .container { width: min(1120px, calc(100% - 40px)); margin: 0 auto; }
+    .eyebrow {
+      color: var(--indigo);
+      font-size: .76rem;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 10px; font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1.06; letter-spacing: -.045em; }
+    h2 { margin-bottom: 8px; font-size: 1.45rem; letter-spacing: -.02em; }
+    h3 { margin-bottom: 6px; font-size: 1rem; }
+    .muted { color: var(--muted); }
+    .small { font-size: .83rem; }
+    .header {
+      padding: 34px 0 26px;
+      background: linear-gradient(180deg, #eef1fb 0%, var(--canvas) 100%);
+      border-bottom: 1px solid var(--line);
+    }
+    .header-row { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; }
+    .header-copy { max-width: 790px; }
+    .subtitle { max-width: 700px; margin-bottom: 18px; color: var(--muted); font-size: 1.04rem; }
+    .badge, .chip, .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      font-size: .78rem;
+      font-weight: 750;
+      line-height: 1;
+    }
+    .badge { padding: 8px 11px; color: var(--indigo-dark); background: var(--indigo-soft); border: 1px solid #d8d6ff; }
+    .chip { padding: 6px 9px; color: var(--indigo-dark); background: var(--indigo-soft); }
+    .button {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--surface);
+      color: var(--navy);
+      padding: 10px 14px;
+      font-weight: 750;
+      transition: .2s ease;
+    }
+    .button:hover { border-color: var(--indigo); color: var(--indigo-dark); transform: translateY(-1px); }
+    .button.primary { color: #fff; background: var(--indigo); border-color: var(--indigo); }
+    .button.primary:hover { background: var(--indigo-dark); }
+    .button.ghost { background: transparent; }
+    .button.danger { color: var(--red); }
+    .button:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+    .flow {
+      display: flex;
+      gap: 0;
+      margin: 28px 0 10px;
+      padding: 0;
+      list-style: none;
+      counter-reset: steps;
+    }
+    .flow li {
+      position: relative;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--muted);
+      font-size: .82rem;
+      font-weight: 750;
+    }
+    .flow li:not(:last-child)::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      margin: 0 12px;
+      background: var(--line);
+    }
+    .flow .number {
+      display: grid;
+      flex: 0 0 28px;
+      height: 28px;
+      place-items: center;
+      border: 1px solid #bcc6d8;
+      border-radius: 50%;
+      background: var(--canvas);
+      color: var(--muted);
+    }
+    .flow li.active { color: var(--indigo-dark); }
+    .flow li.active .number { color: #fff; background: var(--indigo); border-color: var(--indigo); }
+    main { padding: 32px 0 50px; }
+    .section { margin-bottom: 28px; }
+    .section-heading { display: flex; justify-content: space-between; align-items: end; gap: 18px; margin-bottom: 12px; }
+    .section-heading p { margin-bottom: 0; color: var(--muted); }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .step-card { padding: clamp(20px, 4vw, 32px); }
+    .topline { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+    .repo-grid { display: grid; grid-template-columns: 1.2fr 1fr 1.7fr; gap: 12px; margin: 22px 0; }
+    .repo-input-grid { display: grid; grid-template-columns: 1.3fr .8fr .8fr; gap: 12px; margin: 20px 0 12px; }
+    .repo-input-grid .field { min-height: 74px; }
+    .repo-input-grid input, .repo-input-grid select, .repo-input-grid textarea { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; color: var(--navy); background: #fff; outline: none; }
+    .repo-input-grid input:focus, .repo-input-grid select:focus, .repo-input-grid textarea:focus { border-color: var(--indigo); box-shadow: 0 0 0 3px #e6e5ff; }
+    .input-help { margin-top: 5px; color: var(--muted); font-size: .74rem; }
+    .config-panel { margin-top: 14px; padding: 15px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface-soft); }
+    .config-head { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .config-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px 18px; margin-top: 12px; }
+    .config-grid label { display:flex; align-items:center; gap:8px; color:var(--muted); font-size:.82rem; }
+    .config-grid input[type="checkbox"] { accent-color: var(--indigo); }
+    .analysis-summary { display:none; margin-top:16px; padding:13px 15px; border:1px solid #cfe9da; border-radius:10px; color:var(--green); background:var(--green-soft); font-size:.86rem; }
+    .analysis-summary.show { display:block; }
+
+    .field label { display: block; margin-bottom: 4px; color: var(--muted); font-size: .74rem; font-weight: 750; text-transform: uppercase; letter-spacing: .06em; }
+    .field strong { font-size: .96rem; }
+    .metadata { display: flex; flex-wrap: wrap; gap: 18px; color: var(--muted); font-size: .82rem; }
+    .metadata strong { color: var(--navy); }
+    .status { padding: 7px 10px; }
+    .status.high { color: var(--red); background: var(--red-soft); }
+    .status.pass { color: var(--green); background: var(--green-soft); }
+    .status.review { color: var(--amber); background: var(--amber-soft); }
+    .status.neutral { color: var(--muted); background: #edf0f5; }
+    .finding {
+      border: 1px solid #e0dfff;
+      border-left: 4px solid var(--indigo);
+      background: linear-gradient(110deg, #fbfbff, #f2f1ff);
+    }
+    .finding-body { display: grid; grid-template-columns: 1.25fr .75fr; gap: 28px; }
+    .finding .lead { color: #273653; font-size: 1.08rem; }
+    .chips { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 0 18px; }
+    details { margin-top: 18px; border-top: 1px solid #dbdaf6; padding-top: 13px; }
+    summary { cursor: pointer; color: var(--indigo-dark); font-weight: 750; }
+    .suggestion, .confidence-box { padding: 15px; border: 1px solid var(--line); border-radius: 11px; background: rgba(255,255,255,.75); }
+    .suggestion { margin-top: 17px; }
+    .suggestion strong { display: block; color: var(--green); margin-bottom: 5px; }
+    .source { color: var(--indigo-dark); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .78rem; }
+    .meter { height: 8px; margin: 10px 0 7px; overflow: hidden; border-radius: 99px; background: #dfe3f3; }
+    .meter span { display: block; width: 86%; height: 100%; border-radius: inherit; background: var(--indigo); }
+    .chain {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      margin: 22px 0;
+      overflow-x: auto;
+      padding-bottom: 5px;
+    }
+    .chain-item { min-width: 142px; flex: 1; padding: 14px; border: 1px solid var(--line); background: var(--surface-soft); }
+    .chain-item:first-child { border-radius: 11px 0 0 11px; }
+    .chain-item:last-child { border-radius: 0 11px 11px 0; }
+    .chain-arrow { display: grid; min-width: 26px; place-items: center; color: var(--indigo); background: var(--indigo-soft); }
+    .chain-item strong { display: block; margin-bottom: 3px; font-size: .86rem; }
+    .chain-item span { color: var(--muted); font-size: .76rem; }
+    .impact-meta { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 18px; }
+    .warning { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 16px; padding: 12px; border-radius: 10px; color: var(--amber); background: var(--amber-soft); font-size: .87rem; }
+    .test-list { margin: 18px 0; border: 1px solid var(--line); border-radius: 11px; overflow: hidden; }
+    .test-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 13px 15px; border-bottom: 1px solid var(--line); }
+    .test-row:last-child { border-bottom: 0; }
+    .test-row:hover { background: var(--surface-soft); }
+    .test-name { font-weight: 700; }
+    .test-name span { display: block; color: var(--muted); font-size: .78rem; font-weight: 400; }
+    .review-grid { display: grid; grid-template-columns: 1fr .9fr; gap: 24px; }
+    textarea { width: 100%; min-height: 112px; resize: vertical; padding: 13px; border: 1px solid var(--line); border-radius: 10px; color: var(--navy); background: var(--surface-soft); outline: none; }
+    textarea:focus { border-color: var(--indigo); box-shadow: 0 0 0 3px #e6e5ff; }
+    .actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 12px; }
+    .approval { padding: 16px; border-radius: 11px; color: var(--indigo-dark); background: var(--indigo-soft); border: 1px solid #d8d6ff; }
+    .approval strong { display: block; margin-bottom: 4px; }
+    .secondary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .secondary-card { padding: 22px; }
+    .question-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; margin: 16px 0 0; padding: 0; list-style: none; }
+    .question-list li::before { content: "—"; margin-right: 7px; color: var(--indigo); font-weight: 800; }
+    footer { padding: 22px 0 38px; }
+    .rules { padding: 18px 22px; }
+    .rules-list { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 12px 0 0; padding: 0; list-style: none; color: var(--muted); font-size: .85rem; }
+    .rules-list li::before { content: "✓"; margin-right: 7px; color: var(--green); font-weight: 800; }
+    .footer-tools { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-top: 15px; }
+    #toast {
+      position: fixed; right: 22px; bottom: 22px; z-index: 5;
+      max-width: 340px; padding: 13px 16px; border: 1px solid #cfd4e2; border-radius: 10px;
+      color: var(--navy); background: #fff; box-shadow: 0 14px 35px rgba(20,30,55,.17);
+      opacity: 0; transform: translateY(12px); pointer-events: none; transition: .25s ease;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    .modal-backdrop { display: none; position: fixed; inset: 0; z-index: 10; place-items: center; padding: 20px; background: rgba(21,35,61,.42); }
+    .modal-backdrop.open { display: grid; }
+    .modal { width: min(480px, 100%); padding: 25px; border-radius: 16px; background: #fff; box-shadow: 0 22px 60px rgba(21,35,61,.23); }
+    .modal-head { display: flex; justify-content: space-between; gap: 15px; align-items: start; }
+    .close { border: 0; background: transparent; color: var(--muted); font-size: 1.5rem; line-height: 1; }
+    .share-copy { padding: 13px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-soft); color: var(--muted); font-size: .9rem; }
+
+    @media (max-width: 760px) {
+      .container { width: min(100% - 28px, 620px); }
+      .header-row, .topline, .section-heading, .footer-tools { flex-direction: column; align-items: flex-start; }
+      .flow { display: grid; grid-template-columns: 1fr; gap: 8px; }
+      .flow li:not(:last-child)::after { display: none; }
+      .flow li { padding: 6px 0; }
+      .repo-grid, .repo-input-grid, .finding-body, .review-grid, .secondary-grid { grid-template-columns: 1fr; }
+      .chain { display: grid; grid-template-columns: 1fr; overflow: visible; }
+      .chain-item, .chain-item:first-child, .chain-item:last-child { min-width: 0; border-radius: 0; }
+      .chain-item:first-child { border-radius: 11px 11px 0 0; }
+      .chain-item:last-child { border-radius: 0 0 11px 11px; }
+      .chain-arrow { min-height: 22px; }
+      .question-list { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <div class="header-row">
+        <div class="header-copy">
+          <div class="eyebrow">Focused feedback concept</div>
+          <h1>Proposed enhancements to Trail’s code-context workflow</h1>
+          <p class="subtitle">An independent product-feedback concept based on firsthand interaction with Trail. This prototype is not an existing Trail feature, live integration, or connected agent.</p>
+          <span class="badge">Independent concept • Synthetic data</span>
+        </div>
+        <button class="button" id="shareButton">Share concept</button>
+      </div>
+      <ol class="flow" aria-label="Workflow steps">
+        <li class="active"><span class="number">1</span>Submit change</li>
+        <li><span class="number">2</span>Explain risk</li>
+        <li><span class="number">3</span>Trace impact</li>
+        <li><span class="number">4</span>Map tests</li>
+        <li><span class="number">5</span>Review and decide</li>
+      </ol>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="section" id="step1">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">Step 1</div>
+          <h2>Submit a change</h2>
+          <p>Start with a focused change and make context freshness visible before analysis begins.</p>
+        </div>
+      </div>
+      <article class="card step-card">
+        <div class="topline">
+          <div>
+            <h3>Repository change</h3>
+            <p class="muted small">Synthetic workspace for demonstration only.</p>
+          </div>
+          <span class="status neutral" id="analysisStatus">Ready to analyze</span>
+        </div>
+        <div class="repo-input-grid">
+          <div class="field"><label for="repoUrl">Repository or snapshot</label><input id="repoUrl" value="https://github.com/acme-health/care-ops-platform" aria-describedby="repoHelp"><div class="input-help" id="repoHelp">Demo only — no repository is connected or uploaded.</div></div>
+          <div class="field"><label for="branchSelect">Branch</label><select id="branchSelect"><option>main</option><option>develop</option><option>release</option></select></div>
+          <div class="field"><label for="changeType">Change type</label><select id="changeType"><option>Database migration</option><option>Code change</option><option>Pull request</option></select></div>
+        </div>
+        <div class="repo-grid">
+        </div>
+        <div class="config-panel">
+          <div class="config-head"><div><h3>Analysis configuration</h3><p class="muted small">Choose what the simulated copilot should look for and what it should ignore.</p></div><span class="status neutral">Demo controls</span></div>
+          <div class="config-grid">
+            <label><input type="checkbox" checked class="risk-toggle" data-risk="Migration risk"> Migration risk</label>
+            <label><input type="checkbox" checked class="risk-toggle" data-risk="API contract"> API and contract changes</label>
+            <label><input type="checkbox" checked class="risk-toggle" data-risk="Dependency drift"> Dependency drift</label>
+            <label><input type="checkbox" checked class="risk-toggle" data-risk="Test gap"> Unit and integration test gaps</label>
+            <label><input type="checkbox" checked class="risk-toggle" data-risk="Security risk"> Security and permission risk</label>
+            <label><input type="checkbox" checked class="risk-toggle" data-risk="Stale context"> Stale-context warnings</label>
+          </div>
+          <div class="field" style="margin-top:12px"><label for="ignoredPaths">Ignored paths or patterns</label><input id="ignoredPaths" value="node_modules/**, vendor/**, *.generated.ts"><div class="input-help">Synthetic setting — generated files, vendor code, or secrets can be excluded.</div></div>
+        </div>
+        <div class="analysis-summary" id="analysisSummary"></div>
+        <div class="metadata">
+          <span>Latest indexed revision: <strong id="revision">a81f29e</strong></span>
+          <span>Repository freshness: <strong id="freshness">Indexed 18 minutes ago</strong></span>
+        </div>
+        <div class="actions">
+          <button class="button primary" id="analyzeButton">Run simulated analysis</button>
+          <button class="button ghost jump" data-target="step2">View expected finding ↓</button>
+        </div>
+      </article>
+    </section>
+
+    <section class="section" id="step2">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">Step 2</div>
+          <h2>Explain and classify</h2>
+          <p>Separate what was observed from what the developer may choose to do next.</p>
+        </div>
+      </div>
+      <article class="card step-card finding">
+        <div class="finding-body">
+          <div>
+            <div class="topline">
+              <h3>Finding: status rename may break downstream consumers</h3>
+              <span class="status high">High</span>
+            </div>
+            <div class="chips">
+              <span class="chip">Migration risk</span>
+              <span class="chip">API contract</span>
+              <span class="chip">Test gap</span>
+            </div>
+            <p class="lead"><strong>Observed issue:</strong> the migration renames a persisted field, while the care-summary response and sync worker still reference <code>patient_status</code>. A partial rollout could return incomplete status data to the dashboard.</p>
+            <details>
+              <summary>Why this was flagged</summary>
+              <p class="muted small">The indexed code graph found the renamed column in a migration, one response serializer, and two worker queries. The contract snapshot is current, but the sync-worker context is stale and may omit a newer consumer.</p>
+              <p class="source">Observed in: db/migrations/042_status_rename.sql · services/care-summary/serializer.ts · workers/sync-status.ts</p>
+            </details>
+            <div class="suggestion">
+              <strong>Proposed suggestion — not an automatic change</strong>
+              Update the serializer and worker query to use <code>care_status</code>, preserve a compatibility read during rollout, and add a contract assertion for the response field.
+              <div class="source" style="margin-top:8px;">Suggested references: services/care-summary/serializer.ts:28 · workers/sync-status.ts:74</div>
+            </div>
+          </div>
+          <aside class="confidence-box">
+            <h3>Confidence</h3>
+            <div class="meter" aria-label="86 percent confidence"><span></span></div>
+            <strong id="confidenceValue">86%</strong>
+            <p class="muted small">Based on indexed references, contract snapshots, and migration history. Confidence can change when context is refreshed.</p>
+          </aside>
+        </div>
+      </article>
+    </section>
+
+    <section class="section" id="step3">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">Step 3</div>
+          <h2>Trace impact</h2>
+          <p>Follow the dependency chain instead of scanning a broad product dashboard.</p>
+        </div>
+        <button class="button" id="refreshButton">Refresh context</button>
+      </div>
+      <article class="card step-card">
+        <div class="impact-meta">
+          <span class="status neutral">14 affected files</span>
+          <span class="status neutral">3 services</span>
+          <span class="status neutral">2 API contracts</span>
+        </div>
+        <div class="warning" id="staleWarning">
+          <strong>!</strong>
+          <span><strong>Stale context:</strong> sync-worker was indexed 2 days ago. Refresh before relying on the full dependency trace.</span>
+        </div>
+        <div class="chain" aria-label="Dependency chain">
+          <div class="chain-item"><strong>Migration</strong><span>042_status_rename</span></div>
+          <div class="chain-arrow">→</div>
+          <div class="chain-item"><strong>care-summary API</strong><span>Response contract</span></div>
+          <div class="chain-arrow">→</div>
+          <div class="chain-item"><strong>sync worker</strong><span>Stale context</span></div>
+          <div class="chain-arrow">→</div>
+          <div class="chain-item"><strong>Dashboard</strong><span>Status panels</span></div>
+          <div class="chain-arrow">→</div>
+          <div class="chain-item"><strong>Tests</strong><span>4 mapped candidates</span></div>
+        </div>
+        <p class="muted small" id="contextNote">The trace is a recommendation about likely impact, not a proof that every consumer will fail.</p>
+      </article>
+    </section>
+
+    <section class="section" id="step4">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">Step 4</div>
+          <h2>Map tests</h2>
+          <p>Connect the finding to the checks that help a developer make a decision.</p>
+        </div>
+      </div>
+      <article class="card step-card">
+        <div class="test-list">
+          <div class="test-row"><div class="test-name">Contract test<span>care-summary response schema</span></div><span class="status pass">Passing</span></div>
+          <div class="test-row"><div class="test-name">Migration test<span>column rename and compatibility read</span></div><span class="status review">Needs review</span></div>
+          <div class="test-row"><div class="test-name">Integration test<span>sync worker to dashboard status</span></div><span class="status neutral">Not mapped</span></div>
+          <div class="test-row"><div class="test-name">Regression test<span>historical patient status rendering</span></div><span class="status neutral">Not mapped</span></div>
+        </div>
+        <div class="topline">
+          <p class="muted small" style="margin:0;">Recommendations identify relevant tests; they do not make code or test changes automatically.</p>
+          <button class="button primary" id="testsButton">Run mapped tests</button>
+        </div>
+      </article>
+    </section>
+
+    <section class="section" id="step5">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">Step 5</div>
+          <h2>Review and decide</h2>
+          <p>Keep the final interpretation and approval with the developer and team.</p>
+        </div>
+      </div>
+      <article class="card step-card">
+        <div class="review-grid">
+          <div>
+            <h3>Developer feedback</h3>
+            <textarea id="feedback" placeholder="Add context, ask a question, or explain what should change…"></textarea>
+            <div class="actions">
+              <button class="button" data-feedback="Helpful">Helpful</button>
+              <button class="button" data-feedback="Needs work">Needs work</button>
+              <button class="button primary" data-feedback="Accept suggestion">Accept suggestion</button>
+              <button class="button danger" data-feedback="Reject">Reject</button>
+              <button class="button" data-feedback="Request revision">Request revision</button>
+            </div>
+          </div>
+          <div>
+            <div class="approval">
+              <strong>Human approval required</strong>
+              <span class="small">No suggestion is applied, merged, or published without an explicit team decision.</span>
+            </div>
+            <p class="muted small" style="margin-top:16px;">Current review status: <strong id="reviewStatus">Awaiting decision</strong></p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="secondary-grid">
+        <article class="card secondary-card">
+          <div class="eyebrow">Open questions</div>
+          <h2>Customization questions</h2>
+          <p class="muted small">Potential controls for making context and recommendations fit a team’s repository conventions.</p>
+          <ul class="question-list">
+            <li>Repository scope</li>
+            <li>Branches to include</li>
+            <li>Ignored paths</li>
+            <li>Coding standards</li>
+            <li>Severity threshold</li>
+          </ul>
+        </article>
+        <article class="card secondary-card">
+          <div class="eyebrow">Future discussion</div>
+          <h2>Healthcare extension — future discussion</h2>
+          <p class="muted small">A synthetic EHR or remote patient monitoring schema change could trace effects across APIs, alerts, dashboards, and tests while making context freshness especially explicit.</p>
+          <p class="muted small" style="margin-bottom:0;"><strong>No real patient data is used.</strong> This is not a claim about Trail’s current healthcare capabilities.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <article class="card rules">
+        <div class="eyebrow">Prototype principles</div>
+        <h3>Design rules applied</h3>
+        <ul class="rules-list">
+          <li>Readable hierarchy</li>
+          <li>Consistent status colors</li>
+          <li>Source-linked suggestions</li>
+          <li>Stale-context disclosure</li>
+          <li>Human approval</li>
+          <li>No silent learning</li>
+        </ul>
+        <p class="muted small" style="margin:13px 0 0;">Feedback can inform future suggestions only under team controls, with clear review and approval boundaries.</p>
+        <div class="footer-tools">
+          <span class="muted small">Focused concept • Synthetic data • No connected agent</span>
+          <button class="button ghost" id="resetButton">Reset demo</button>
+        </div>
+      </article>
+    </div>
+  </footer>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <div class="modal-backdrop" id="shareModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <div class="eyebrow">Share-ready summary</div>
+          <h2 id="modalTitle">Trail Code Context — Focused Feedback Concept</h2>
+        </div>
+        <button class="close" id="closeModal" aria-label="Close dialog">×</button>
+      </div>
+      <p class="share-copy">An independent, synthetic-data concept for a focused code-context workflow: submit a change, explain risk, trace impact, map tests, and keep final approval with the developer.</p>
+      <div class="actions">
+        <button class="button primary" id="copyShare">Copy summary</button>
+        <button class="button" id="cancelShare">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const toast = (message) => {
+      const el = document.getElementById('toast');
+      el.textContent = message;
+      el.classList.add('show');
+      clearTimeout(window.toastTimer);
+      window.toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+    };
+
+    document.querySelectorAll('.jump').forEach(button => {
+      button.addEventListener('click', () => document.getElementById(button.dataset.target).scrollIntoView({ behavior: 'smooth' }));
+    });
+
+    const analyzeButton = document.getElementById('analyzeButton');
+    const analysisStatus = document.getElementById('analysisStatus');
+    analyzeButton.addEventListener('click', () => {
+      if (analyzeButton.dataset.running) return;
+      analyzeButton.dataset.running = 'true';
+      analyzeButton.disabled = true;
+      analyzeButton.textContent = 'Analyzing…';
+      analysisStatus.textContent = 'Validating repository inputs…';
+      analysisStatus.className = 'status review';
+      document.getElementById('analysisSummary').classList.remove('show');
+      setTimeout(() => {
+        analyzeButton.textContent = 'Analysis ready';
+        analysisStatus.textContent = 'Analysis ready';
+        analysisStatus.className = 'status pass';
+        document.getElementById('analysisSummary').textContent = 'Simulated result for ' + document.getElementById('repoUrl').value + ' on ' + document.getElementById('branchSelect').value + ': classified findings are ready using the selected standards and risk checks.';
+        document.getElementById('analysisSummary').classList.add('show');
+        delete analyzeButton.dataset.running;
+        toast('Simulated analysis complete: findings are ready to review.');
+        document.getElementById('step2').scrollIntoView({ behavior: 'smooth' });
+      }, 1500);
+    });
+
+    const refreshButton = document.getElementById('refreshButton');
+    refreshButton.addEventListener('click', () => {
+      refreshButton.disabled = true;
+      refreshButton.textContent = 'Refreshing…';
+      setTimeout(() => {
+        refreshButton.disabled = false;
+        refreshButton.textContent = 'Context refreshed';
+        document.getElementById('staleWarning').innerHTML = '<strong>✓</strong><span><strong>Context refreshed:</strong> sync-worker is now aligned with revision a81f29e.</span>';
+        document.getElementById('staleWarning').style.color = 'var(--green)';
+        document.getElementById('staleWarning').style.background = 'var(--green-soft)';
+        document.getElementById('confidenceValue').textContent = '93%';
+        document.querySelector('.meter span').style.width = '93%';
+        document.getElementById('contextNote').textContent = 'Context freshness improved confidence; the trace remains a recommendation for human review.';
+        toast('Context refreshed and confidence updated to 93%.');
+      }, 1200);
+    });
+
+    const testsButton = document.getElementById('testsButton');
+    testsButton.addEventListener('click', () => {
+      testsButton.disabled = true;
+      testsButton.textContent = 'Running mapped tests…';
+      setTimeout(() => {
+        testsButton.disabled = false;
+        testsButton.textContent = 'Tests complete';
+        toast('Mapped tests complete: contract test passed; migration test still needs review.');
+      }, 1500);
+    });
+
+    document.querySelectorAll('[data-feedback]').forEach(button => {
+      button.addEventListener('click', () => {
+        const value = button.dataset.feedback;
+        document.getElementById('reviewStatus').textContent = value;
+        toast('Review status updated: ' + value + '.');
+      });
+    });
+
+    const modal = document.getElementById('shareModal');
+    document.getElementById('shareButton').addEventListener('click', () => modal.classList.add('open'));
+    document.getElementById('closeModal').addEventListener('click', () => modal.classList.remove('open'));
+    document.getElementById('cancelShare').addEventListener('click', () => modal.classList.remove('open'));
+    modal.addEventListener('click', (event) => { if (event.target === modal) modal.classList.remove('open'); });
+    document.getElementById('copyShare').addEventListener('click', async () => {
+      const text = 'An independent, synthetic-data concept for a focused code-context workflow: submit a change, explain risk, trace impact, map tests, and keep final approval with the developer.';
+      try {
+        await navigator.clipboard.writeText(text);
+        toast('Share summary copied.');
+      } catch {
+        toast('Summary ready to share.');
+      }
+    });
+
+    document.getElementById('resetButton').addEventListener('click', () => {
+      location.reload();
+    });
+  </script>
+</body>
+</html>
